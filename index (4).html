@@ -1,0 +1,144 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Share Link</title>
+    <style>
+        .share-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .share-button {
+            width: 40px;
+            height: 40px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .copy-link {
+            width: 40px;
+            height: 40px;
+            background-color: #555555;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="share-buttons">
+        <button class="share-button" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg');" onclick="shareOnFacebook()"></button>
+        <button class="share-button" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/b/b7/X_logo.jpg');" onclick="shareOnX()"></button>
+        <button class="share-button" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg');" onclick="shareOnWhatsApp()"></button>
+        <button class="share-button" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png');" onclick="shareOnLinkedIn()"></button>
+        <button class="share-button" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg');" onclick="shareOnTelegram()"></button>
+        <button class="share-button" style="background-image: url('data:image/png;base64,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');" onclick="shareOnMessenger()"></button>
+        <button class="share-button" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg');" onclick="shareViaEmail()"></button>
+        <button class="share-button" style="background-image: url('https://cdn-icons-png.flaticon.com/512/9068/9068811.png');" onclick="shareGeneric()"></button>
+        <button class="share-button copy-link" onclick="copyLink()">📋</button>
+    </div>
+
+    <script>
+        const url = "https://sites.google.com/view/bmfo-org/post/Drugs?authuser=3";
+        const title = "Check out this post on Drugs";
+        const encodedUrl = encodeURIComponent(url);
+        const encodedTitle = encodeURIComponent(title);
+
+        function shareOnFacebook() {
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`, '_blank');
+        }
+
+        function shareOnX() {
+            window.open(`https://x.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`, '_blank');
+        }
+
+        function shareOnWhatsApp() {
+            window.open(`https://api.whatsapp.com/send?text=${encodedTitle}%20${encodedUrl}`, '_blank');
+        }
+
+        function shareOnLinkedIn() {
+            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`, '_blank');
+        }
+
+        function shareOnTelegram() {
+            window.open(`https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`, '_blank');
+        }
+
+        function shareOnMessenger() {
+            window.open(`fb-messenger://share/?link=${encodedUrl}`, '_blank');
+        }
+
+        function shareViaEmail() {
+            window.location.href = `mailto:?subject=${encodedTitle}&body=${encodedTitle}%20${encodedUrl}`;
+        }
+
+        function shareGeneric() {
+            if (navigator.share) {
+                navigator.share({
+                    title: title,
+                    url: url
+                }).catch(console.error);
+            } else {
+                alert("Sharing not supported on this device. Please copy the link manually: " + url);
+            }
+        }
+
+        function copyLink() {
+            navigator.clipboard.writeText(url).then(() => {
+                alert("Link copied to clipboard!");
+            }).catch(err => {
+                alert("Failed to copy link: " + err);
+            });
+        }
+    </script>
+</body>
+</html>
